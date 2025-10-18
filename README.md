@@ -172,6 +172,58 @@ Notas:
 - Reemplaza YOUR_API_KEY por el valor real configurado en tu `.env`.
 - El filtro de `jq` muestra solo el campo `response` en tiempo real; si quieres ver todo el JSON, elimina el filtro.
 
+## Caso de uso: Hogar + IoT + Ollama (proxy seguro)
+
+### Objetivo
+Usar este proxy para exponer, de forma segura dentro de la red local, un servidor Ollama (modelos locales o acceso a proveedores tipo cloud vía gateway) y permitir que dispositivos IoT consuman IA multimodal sin hardware potente. El proxy agrega autenticación Bearer y observabilidad.
+
+### Arquitectura (resumen)
+- Dispositivos IoT en LAN → Proxy API-SEC (puerto 8010, autenticación Bearer) → Ollama (11434) u otro backend de IA.
+- El proxy valida tokens, registra métricas/logs y reenvía rutas como “drop-in” (/v1/models, /api/generate, etc.).
+
+### Requisitos
+- Un host dentro de tu red con:
+  - Ollama instalado (u otro backend de IA)
+  - Este proxy ejecutándose (systemd recomendado)
+- Un token compartido (API_KEY) para los dispositivos IoT
+
+### Configuración de ejemplo (.env)
+```ini
+IP_BIND=0.0.0.0
+PORT_BIND=8010
+IP_LISTENER=192.168.1.43
+PORT_LISTENER=11434
+API_KEY=coloca-un-token-largo-y-seguro
+```
+
+### Flujo típico
+1) El dispositivo IoT hace una petición a `http://IP_DEL_PROXY:8010/...` con `Authorization: Bearer <TOKEN>`.
+2) El proxy valida el token y reenvía la solicitud al backend (Ollama).
+3) La respuesta (incluyendo streaming) vuelve al dispositivo IoT.
+
+### Ejemplos rápidos
+- Consultar modelos disponibles del backend:
+```bash
+export TOKEN=YOUR_API_KEY
+curl -s http://192.168.1.50:8010/v1/models \
+  -H "Authorization: Bearer $TOKEN" | jq
+```
+
+- Generación estilo “chatbot” con streaming:
+```bash
+export TOKEN=YOUR_API_KEY
+curl -sN http://192.168.1.50:8010/api/generate \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"gpt-oss:20b","prompt":"System: ...\nUser: ...\nAssistant:","stream":true}'
+```
+
+### Buenas prácticas de seguridad
+- Mantener el proxy solo en la LAN (no exponer 8010 a Internet).
+- Rotar periódicamente `API_KEY` y distribuirla de forma segura en los IoT.
+- Opcional: colocar delante un reverse proxy TLS (Caddy/Traefik/Nginx) si necesitas HTTPS interno.
+- Limitar por firewall qué IPs pueden alcanzar el puerto 8010.
+
 
 
 Para modo de desarrollo con recarga automática:
