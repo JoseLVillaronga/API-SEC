@@ -181,6 +181,23 @@ Usar este proxy para exponer, de forma segura dentro de la red local, un servido
 - Dispositivos IoT en LAN → Proxy API-SEC (puerto 8010, autenticación Bearer) → Ollama (11434) u otro backend de IA.
 - El proxy valida tokens, registra métricas/logs y reenvía rutas como “drop-in” (/v1/models, /api/generate, etc.).
 
+### Diagrama (Mermaid)
+```mermaid
+graph LR
+  subgraph LAN
+    IoT1[IoT Device A]
+    IoT2[IoT Device B]
+    IoTn[IoT Device N]
+    Proxy[API-SEC Proxy :8010\nBearer Auth + Logs + Metrics]
+    IoT1 -->|HTTP + Bearer| Proxy
+    IoT2 -->|HTTP + Bearer| Proxy
+    IoTn -->|HTTP + Bearer| Proxy
+  end
+  Proxy -->|Forward requests| Ollama[Ollama :11434\n/v1/models, /api/generate, ...]
+  style Proxy fill:#e8f0fe,stroke:#3367d6
+  style Ollama fill:#e6ffe6,stroke:#2e7d32
+```
+
 ### Requisitos
 - Un host dentro de tu red con:
   - Ollama instalado (u otro backend de IA)
