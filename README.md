@@ -155,6 +155,24 @@ Notas:
 - El endpoint de destino puede responder en modo streaming (múltiples líneas JSON).
 - Sustituye YOUR_API_KEY por el valor real configurado en tu `.env`.
 
+### Ejemplo estilo chatbot (streaming)
+
+Permite obtener texto continuo como en un chat usando el endpoint de generación con stream:
+
+```bash
+export TOKEN=YOUR_API_KEY
+curl -sN http://localhost:8010/api/generate \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"gpt-oss:20b","prompt":"System: Eres un asistente útil y conciso.\nUser: Hola, ¿qué puedes hacer?\nAssistant:","stream":true}' \
+| jq -r 'select(.response!=null) | .response'
+```
+
+Notas:
+- Reemplaza YOUR_API_KEY por el valor real configurado en tu `.env`.
+- El filtro de `jq` muestra solo el campo `response` en tiempo real; si quieres ver todo el JSON, elimina el filtro.
+
+
 
 Para modo de desarrollo con recarga automática:
 ```bash
