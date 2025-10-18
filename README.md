@@ -23,12 +23,18 @@ Servidor proxy implementado con FastAPI para capturar y procesar solicitudes HTT
 
 ## Instalación
 
-1. Instalar las dependencias:
+1. Crear y activar un entorno virtual (recomendado):
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+2. Instalar las dependencias:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Configurar las variables de entorno en el archivo `.env`:
+3. Configurar las variables de entorno en el archivo `.env`:
 ```
 IP_BIND=0.0.0.0
 PORT_BIND=8000
@@ -82,6 +88,47 @@ El servidor implementa dos niveles de middleware para logging:
 2. **RequestDataMiddleware**: Captura y registra detalles adicionales como query parameters y body
 
 ## Desarrollo
+
+## Instalar como servicio systemd
+
+Requisitos: tener el entorno virtual creado y las dependencias instaladas.
+
+
+Aviso sobre .env:
+- Este servicio carga variables desde el archivo `.env` en la raíz del proyecto (EnvironmentFile).
+- Para comenzar, crea tu configuración a partir del ejemplo:
+```bash
+cp .env.example .env
+```
+- Edita al menos: `IP_BIND`, `PORT_BIND`, `IP_LISTENER`, `PORT_LISTENER`, `API_KEY`, `LOG_LEVEL`.
+- Cada vez que modifiques `.env`, reinicia el servicio para aplicar cambios:
+```bash
+sudo systemctl restart api-sec
+```
+- Mantén secretos fuera del repositorio (no subas `.env` a control de versiones).
+
+Comandos principales:
+```bash
+sudo scripts/install_systemd_service.sh api-sec
+sudo systemctl status api-sec
+journalctl -u api-sec -f
+sudo systemctl restart api-sec
+sudo systemctl enable api-sec
+sudo systemctl disable api-sec
+```
+
+Desinstalar el servicio:
+```bash
+sudo systemctl disable --now api-sec
+sudo rm /etc/systemd/system/api-sec.service
+sudo systemctl daemon-reload
+```
+
+Nota: asegúrate de que el script sea ejecutable (permisos recomendados 755):
+```bash
+chmod 755 scripts/install_systemd_service.sh
+```
+
 
 Para modo de desarrollo con recarga automática:
 ```bash
