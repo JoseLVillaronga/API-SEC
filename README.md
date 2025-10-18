@@ -231,9 +231,3 @@ Para modo de desarrollo con recarga automática:
 uvicorn src.server.app:app --host 0.0.0.0 --port 8000 --reload --log-level debug
 ```
 
-## Próximos Pasos
-
-- Implementar cliente de reenvío de solicitudes
-- Agregar autenticación mediante API key
-- Implementar persistencia de logs
-- Agregar métricas y monitoreo
