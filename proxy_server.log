@@ -1,0 +1,36 @@
+nohup: ignoring input
+2025-10-16 15:47:45,948 - proxy_server - INFO - 🚀 Starting server on 0.0.0.0:8000
+🚀 Iniciando servidor proxy...
+[32m2025-10-16 15:47:45 - proxy_server - INFO[0m - 🚀 Starting server on 0.0.0.0:8000
+INFO:     Started server process [21892]
+INFO:     Waiting for application startup.
+2025-10-16 15:47:46,002 - proxy_server - INFO - 🚀 Starting Proxy Server...
+[32m2025-10-16 15:47:46 - proxy_server - INFO[0m - 🚀 Starting Proxy Server...
+2025-10-16 15:47:46,004 - proxy_server - INFO - 📍 Bind Address: 0.0.0.0:8000
+[32m2025-10-16 15:47:46 - proxy_server - INFO[0m - 📍 Bind Address: 0.0.0.0:8000
+2025-10-16 15:47:46,005 - proxy_server - INFO - 🎯 Target: 192.168.1.43:11434
+[32m2025-10-16 15:47:46 - proxy_server - INFO[0m - 🎯 Target: 192.168.1.43:11434
+2025-10-16 15:47:46,005 - proxy_server - INFO - 🔑 API Key configured: Yes
+[32m2025-10-16 15:47:46 - proxy_server - INFO[0m - 🔑 API Key configured: Yes
+2025-10-16 15:47:46,006 - proxy_server - INFO - 🐛 Debug mode: False
+[32m2025-10-16 15:47:46 - proxy_server - INFO[0m - 🐛 Debug mode: False
+2025-10-16 15:47:46,006 - proxy_server - INFO - 📊 Metrics system initialized
+[32m2025-10-16 15:47:46 - proxy_server - INFO[0m - 📊 Metrics system initialized
+2025-10-16 15:47:46,007 - proxy_server - INFO - 🏥 Health checks initialized
+[32m2025-10-16 15:47:46 - proxy_server - INFO[0m - 🏥 Health checks initialized
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2025-10-16 15:47:49,831 - proxy_server - INFO - 📥 REQUEST: GET http://127.0.0.1:8000/v1/models | IP: 127.0.0.1 | User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36
+[32m2025-10-16 15:47:49 - proxy_server - INFO[0m - 📥 REQUEST: GET http://127.0.0.1:8000/v1/models | IP: 127.0.0.1 | User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36
+2025-10-16 15:47:49,832 - proxy_server.routes - INFO - PROXY REQUEST RECEIVED
+[32m2025-10-16 15:47:49 - proxy_server.routes - INFO[0m - PROXY REQUEST RECEIVED
+2025-10-16 15:47:49,833 - proxy_server.routes - INFO - FORWARDING REQUEST TO TARGET SERVER
+[32m2025-10-16 15:47:49 - proxy_server.routes - INFO[0m - FORWARDING REQUEST TO TARGET SERVER
+[32m2025-10-16 15:47:49 - proxy_client - INFO[0m - Forwarding request
+[32m2025-10-16 15:47:49 - httpx - INFO[0m - HTTP Request: GET http://192.168.1.43:11434/v1/models "HTTP/1.1 200 OK"
+[32m2025-10-16 15:47:49 - proxy_client - INFO[0m - Response received from target
+2025-10-16 15:47:49,882 - proxy_server.routes - INFO - RESPONSE FROM TARGET
+[32m2025-10-16 15:47:49 - proxy_server.routes - INFO[0m - RESPONSE FROM TARGET
+2025-10-16 15:47:49,883 - proxy_server - INFO - 📤 RESPONSE: 200 | Time: 0.0525s
+[32m2025-10-16 15:47:49 - proxy_server - INFO[0m - 📤 RESPONSE: 200 | Time: 0.0525s
+INFO:     127.0.0.1:32824 - "GET /v1/models HTTP/1.1" 200 OK

@@ -1,0 +1,24 @@
+# Framework web principal
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+
+# Manejo de configuración con pydantic
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Middleware y herramientas adicionales
+python-multipart>=0.0.6
+
+# Desarrollo y testing (opcional)
+pytest>=7.4.3
+pytest-asyncio>=0.21.1
+httpx>=0.25.2
+
+# Logging y utilidades
+structlog>=23.2.0
+
+# Sistema y métricas
+psutil>=5.9.0
+
+# Entorno
+dotenv>=dotenv-0.9.9
