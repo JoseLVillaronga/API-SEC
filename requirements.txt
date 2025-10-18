@@ -21,4 +21,4 @@ structlog>=23.2.0
 psutil>=5.9.0
 
 # Entorno
-dotenv>=dotenv-0.9.9
+dotenv>=0.9.9
