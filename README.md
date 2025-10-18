@@ -130,6 +130,32 @@ chmod 755 scripts/install_systemd_service.sh
 ```
 
 
+## Pruebas rápidas con curl
+
+Validación rápida de autenticación y reenvío:
+
+- Solicitud válida (token correcto):
+```bash
+curl -X POST http://localhost:8010/api/generate \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{"model":"gpt-oss:20b","prompt":"Hello"}'
+```
+
+- Solicitud inválida (token erróneo):
+```bash
+curl -X POST http://localhost:8010/api/generate \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer WRONG_TOKEN" \
+  -d '{"model":"gpt-oss:20b","prompt":"Hello"}'
+# Esperado: 401 {"error":"Invalid authentication token"}
+```
+
+Notas:
+- El endpoint de destino puede responder en modo streaming (múltiples líneas JSON).
+- Sustituye YOUR_API_KEY por el valor real configurado en tu `.env`.
+
+
 Para modo de desarrollo con recarga automática:
 ```bash
 uvicorn src.server.app:app --host 0.0.0.0 --port 8000 --reload --log-level debug
