@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # Importaciones locales
 from src.config.settings import settings
-from src.server.middleware import LoggingMiddleware, RequestDataMiddleware
+from src.server.middleware import LoggingMiddleware, RequestDataMiddleware, RateLimitMiddleware
 from src.server.auth_middleware import AuthenticationMiddleware
 from src.server.routes import proxy_router
 from src.server.health import health_router
@@ -101,6 +101,7 @@ app.add_middleware(
 app.add_middleware(RequestDataMiddleware)
 app.add_middleware(LoggingMiddleware)
 app.add_middleware(AuthenticationMiddleware, exclude_paths=["/health"])
+app.add_middleware(RateLimitMiddleware, max_requests=settings.api_rate_limit, window_seconds=60)
 
 
 # Manejadores de excepciones mejorados

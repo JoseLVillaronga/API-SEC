@@ -37,10 +37,11 @@ pip install -r requirements.txt
 3. Configurar las variables de entorno en el archivo `.env`:
 ```
 IP_BIND=0.0.0.0
-PORT_BIND=8000
+PORT_BIND=8010
 IP_LISTENER=127.0.0.1
 PORT_LISTENER=11434
-API_KEY=0480469fba14b87ad14588f6a4877ac19dfb9986be342a88a4535f7b631a753ecdcf003ed8ea61adcf51a30619fd2a664a2aa45037eb801646011a52b32ef761
+API_KEY=tu_contraseña_secreta
+API_RATE_LIMIT=50
 ```
 
 ## Ejecución
@@ -73,6 +74,9 @@ uvicorn src.server.app:app --host 0.0.0.0 --port 8000 --reload
 ## Características
 
 - ✅ Captura todos los métodos HTTP (GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD)
+- ✅ **Streaming en tiempo real:** Soporte completo de respuestas `stream=True` sin buffering en memoria, permitiendo latencia ultra baja en interfaces conversacionales.
+- ✅ **API Rate Limiting:** Protección anti-abuso configurada por IP que devuelve respuestas HTTP 429 estandarizadas bajo el formato OpenAI.
+- ✅ **Soporte Multimodal / Visión:** Permite transferir imágenes en formato Base64 de forma transparente para modelos de visión.
 - ✅ Preserva todos los headers, query parameters y body de las solicitudes
 - ✅ Middleware para logging básico y avanzado
 - ✅ Configuración mediante variables de entorno
@@ -155,16 +159,49 @@ Notas:
 - El endpoint de destino puede responder en modo streaming (múltiples líneas JSON).
 - Sustituye YOUR_API_KEY por el valor real configurado en tu `.env`.
 
-### Ejemplo estilo chatbot (streaming)
+### Ejemplos estándar OpenAI (Streaming y Chat)
 
-Permite obtener texto continuo como en un chat usando el endpoint de generación con stream:
+El proxy es un puente 100% compatible con las librerías oficiales de OpenAI y herramientas como **Cline**, **Continue.dev**, o **Chatbot UI**. Acepta y retransmite las llamadas al estándar `/v1/chat/completions`.
+
+**Ejemplo sin Streaming:**
+```bash
+curl -X POST http://localhost:8010/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "model": "llama3",
+    "messages": [
+      {"role": "user", "content": "¿Qué es un proxy inverso?"}
+    ]
+  }'
+```
+
+**Ejemplo con Streaming en Tiempo Real (Recomendado):**
+```bash
+# El flag -N previene que curl guarde en memoria el buffer y muestre el stream en vivo
+curl -N -X POST http://localhost:8010/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "model": "gemma4:26b",
+    "stream": true,
+    "messages": [
+      {"role": "system", "content": "Eres un asistente de ciberseguridad."},
+      {"role": "user", "content": "Dame 3 consejos rápidos."}
+    ]
+  }'
+```
+
+### Ejemplo estilo nativo Ollama
+
+Si tu destino es Ollama y prefieres usar su API propietaria:
 
 ```bash
 export TOKEN=YOUR_API_KEY
 curl -sN http://localhost:8010/api/generate \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"model":"gpt-oss:20b","prompt":"System: Eres un asistente útil y conciso.\nUser: Hola, ¿qué puedes hacer?\nAssistant:","stream":true}' \
+  -d '{"model":"llama3","prompt":"Hola","stream":true}' \
 | jq -r 'select(.response!=null) | .response'
 ```
 

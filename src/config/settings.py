@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     # API Key para autenticación
     api_key: str = os.getenv('API_KEY')
     
+    # Límite de peticiones por minuto
+    api_rate_limit: int = int(os.getenv('API_RATE_LIMIT', 50))
+    
     # Configuración adicional
     debug: bool = False
     log_level: str = os.getenv('LOG_LEVEL')

@@ -304,25 +304,36 @@ class ProxyClient:
                     elif body is not None:
                         body_data = body
                 
-                # Realizar solicitud HTTP con timeout
-                try:
-                    response = await asyncio.wait_for(
-                        self.http_client.request(
-                            method=method,
-                            url=target_url,
-                            headers=prepared_headers,
-                            params=None,  # Ya incluidos en la URL
-                            data=body_data,
-                            json=json_data
-                        ),
-                        timeout=30.0  # 30 segundos timeout
-                    )
-                except asyncio.TimeoutError:
-                    raise TimeoutError("Request to target server timed out", timeout_seconds=30.0)
+                # Realizar solicitud HTTP proxyando como stream real
+                import httpx
+                from starlette.background import BackgroundTask
                 
-                context_logger.info("Response received from target", extra={
+                # Deshabilitamos el timeout estricto de lectura (read timeout) para permitir
+                # peticiones de streaming largas (por ejemplo, generación de IA) sin que se corten a los 30s.
+                # Mantenemos el timeout de conexión en 30s.
+                timeout_config = httpx.Timeout(timeout=None, connect=30.0)
+                client = httpx.AsyncClient(verify=False, timeout=timeout_config)
+                
+                req = client.build_request(
+                    method=method.upper(),
+                    url=target_url,
+                    headers=prepared_headers,
+                    content=body_data,
+                    json=json_data
+                )
+                
+                try:
+                    # Enviar la solicitud en modo stream
+                    response = await client.send(req, stream=True)
+                except httpx.TimeoutException:
+                    await client.aclose()
+                    raise TimeoutError("Request to target server timed out", timeout_seconds=30.0)
+                except Exception as e:
+                    await client.aclose()
+                    raise e
+                
+                context_logger.info("Response stream established with target", extra={
                     "status_code": response.status_code,
-                    "response_size": len(response.content) if hasattr(response, 'content') else 0
                 })
                 
                 # Registrar métricas
@@ -334,44 +345,61 @@ class ProxyClient:
                 
                 # Verificar si la respuesta indica error
                 if response.status_code >= 500:
+                    await response.aclose()
+                    await client.aclose()
                     raise ServiceUnavailableError(
                         f"Target server returned error status: {response.status_code}",
                         service_name="target_server"
                     )
                 elif response.status_code >= 400:
+                    # Si es error del cliente, leemos el cuerpo para reportarlo, y luego cerramos
+                    await response.aread()
+                    error_text = response.text
+                    await response.aclose()
+                    await client.aclose()
                     raise HTTPError(
                         f"Target server returned client error: {response.status_code}",
                         status_code=response.status_code,
-                        response_text=response.text if hasattr(response, 'text') else ''
+                        response_text=error_text
                     )
                 
                 # Preparar headers de respuesta (omitir algunos que pueden causar conflictos)
                 response_headers = {}
                 headers_to_omit = {
-                    'content-length',  # Se recalcula automáticamente
-                    'transfer-encoding',  # Se maneja automáticamente
-                    'connection',  # Se maneja automáticamente
-                    'keep-alive',  # Se maneja automáticamente
+                    'content-length',  # FastAPI / httpx recalculan o usan chunked
+                    'transfer-encoding',
+                    'connection',
+                    'keep-alive',
+                    'content-encoding', # Si el contenido viene comprimido, mejor no pasarlo tal cual si interfiere
                 }
                 
                 for key, value in response.headers.items():
                     if key.lower() not in headers_to_omit:
                         response_headers[key] = value
                 
-                # Crear respuesta FastAPI
+                # Función de limpieza para cerrar el stream y el cliente de forma segura
+                async def cleanup():
+                    try:
+                        await response.aclose()
+                    finally:
+                        await client.aclose()
+                
+                # Crear respuesta FastAPI (Streaming)
                 if method.upper() == 'HEAD':
                     # Para HEAD, no devolver body
+                    await cleanup()
                     return Response(
                         status_code=response.status_code,
                         headers=response_headers
                     )
                 else:
-                    # Para otros métodos, devolver body
-                    return Response(
-                        content=response.content,
+                    # Retornamos un StreamingResponse real
+                    return StreamingResponse(
+                        response.aiter_raw(),
                         status_code=response.status_code,
                         headers=response_headers,
-                        media_type=response.headers.get('content-type')
+                        media_type=response.headers.get('content-type'),
+                        background=BackgroundTask(cleanup)
                     )
             
             except (ValidationError, ConnectionError, TimeoutError, HTTPError, ServiceUnavailableError):

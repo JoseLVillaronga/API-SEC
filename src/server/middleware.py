@@ -89,3 +89,56 @@ class RequestDataMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         
         return response
+
+
+from fastapi.responses import JSONResponse
+
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    """Middleware para limitar la cantidad de peticiones (Rate Limiting)"""
+    
+    def __init__(self, app, max_requests: int = 60, window_seconds: int = 60, exclude_paths: list = None):
+        super().__init__(app)
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self.exclude_paths = exclude_paths or ["/health", "/info"]
+        # Estructura: { "ip_address": [timestamp1, timestamp2, ...] }
+        self.request_records = {}
+        
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        # Ignorar rutas excluidas
+        if any(request.url.path.startswith(path) for path in self.exclude_paths):
+            return await call_next(request)
+            
+        client_ip = request.client.host if request.client else "unknown"
+        current_time = time.time()
+        
+        # Inicializar registro si no existe
+        if client_ip not in self.request_records:
+            self.request_records[client_ip] = []
+            
+        # Limpiar registros antiguos (fuera de la ventana de tiempo)
+        self.request_records[client_ip] = [
+            ts for ts in self.request_records[client_ip] 
+            if current_time - ts < self.window_seconds
+        ]
+        
+        # Verificar si superó el límite
+        if len(self.request_records[client_ip]) >= self.max_requests:
+            logger.warning(f"Rate limit exceeded for IP: {client_ip}")
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "error": {
+                        "message": f"Rate limit reached ({self.max_requests} reqs/{self.window_seconds}s). Please try again later.",
+                        "type": "requests",
+                        "param": None,
+                        "code": "rate_limit_exceeded"
+                    }
+                }
+            )
+            
+        # Registrar petición permitida
+        self.request_records[client_ip].append(current_time)
+        
+        # Continuar con la petición
+        return await call_next(request)
