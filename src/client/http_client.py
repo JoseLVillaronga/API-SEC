@@ -26,7 +26,7 @@ class HTTPClient:
     
     def __init__(
         self,
-        timeout: float = 30.0,
+        timeout: float = 180.0,
         max_retries: int = 3,
         retry_delay: float = 1.0,
         backoff_factor: float = 2.0

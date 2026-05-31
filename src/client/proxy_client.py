@@ -34,7 +34,7 @@ class ProxyClient:
     def __init__(self):
         """Inicializa el cliente proxy."""
         try:
-            self.http_client = HTTPClient()
+            self.http_client = HTTPClient(timeout=180.0)
             self.base_url = f"http://{settings.ip_listener}:{settings.port_listener}"
             self.api_key = settings.api_key
             
